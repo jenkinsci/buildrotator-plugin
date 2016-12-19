@@ -19,7 +19,7 @@
   </properties>
 
   <name>Build Rotator</name>
-  <description>Build rotator plugin</description>
+  <description>Allows to perform rotation of build history with low memory pressure</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/Build+Rotator+Plugin</url>
   <licenses>
     <license>
