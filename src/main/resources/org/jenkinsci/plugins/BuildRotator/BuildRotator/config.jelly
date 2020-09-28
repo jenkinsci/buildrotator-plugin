@@ -12,4 +12,10 @@
   <f:entry title="Max # of artifacts to keep" field="artifactsNumToKeep">
     <f:number default="-1"/>
   </f:entry>
+  <f:entry title="Always keep last successful build" field="keepLastSuccessful">
+    <f:checkbox default="true" />
+  </f:entry>
+  <f:entry title="Always keep last stable build" field="keepLastStable">
+    <f:checkbox default="true" />
+  </f:entry>
 </j:jelly>

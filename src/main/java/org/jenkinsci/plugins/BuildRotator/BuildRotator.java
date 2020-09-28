@@ -36,14 +36,19 @@ public class BuildRotator extends BuildDiscarder {
     private final int numToKeep;
     private final int artifactsDaysToKeep;
     private final int artifactsNumToKeep;
+    private final boolean keepLastSuccessful;
+    private final boolean keepLastStable;
 
     @DataBoundConstructor
-    public BuildRotator(int daysToKeep, int numToKeep, int artifactsDaysToKeep, int artifactsNumToKeep) {
+    public BuildRotator(int daysToKeep, int numToKeep, int artifactsDaysToKeep, int artifactsNumToKeep,
+        boolean keepLastSuccessful, boolean keepLastStable) {
         super();
         this.daysToKeep = daysToKeep;
         this.numToKeep = numToKeep;
         this.artifactsDaysToKeep = artifactsDaysToKeep;
         this.artifactsNumToKeep = artifactsNumToKeep;
+        this.keepLastSuccessful = keepLastSuccessful;
+        this.keepLastStable = keepLastStable;
     }
 
     @SuppressWarnings("unused")
@@ -64,6 +69,16 @@ public class BuildRotator extends BuildDiscarder {
     @SuppressWarnings("unused")
     public int getNumToKeep() {
         return numToKeep;
+    }
+
+    @SuppressWarnings("unused")
+    public boolean isKeepLastSuccessful() {
+        return keepLastSuccessful;
+    }
+
+    @SuppressWarnings("unused")
+    public boolean isKeepLastStable() {
+        return keepLastStable;
     }
 
     @Override
@@ -95,15 +110,20 @@ public class BuildRotator extends BuildDiscarder {
     }
 
     private void removeByNumber(Job<?, ?> job, Run lastSuccessfulBuild, Run lastStableBuild, Action action) throws IOException {
-        int lastJob = job.getLastCompletedBuild().getNumber();
-        int minNumber = lastJob - numToKeep;
-        Run r = job.getFirstBuild();
-        while (r != null) {
-            if (r.getNumber() > minNumber) {
+        Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
+        if (lastCompletedBuild != null) {
+            int lastJob = lastCompletedBuild.getNumber();
+            int minNumber = lastJob - numToKeep;
+            Run r = job.getFirstBuild();
+            while (r != null) {
+              if (r.getNumber() > minNumber) {
                 break;
+              }
+              remove(lastSuccessfulBuild, lastStableBuild, action, r);
+              r = r.getNextBuild();
             }
-            remove(lastSuccessfulBuild, lastStableBuild, action, r);
-            r = r.getNextBuild();
+        } else {
+            LOGGER.log(FINE, "There are no builds to remove for {0}", job);
         }
     }
 
@@ -139,11 +159,11 @@ public class BuildRotator extends BuildDiscarder {
             LOGGER.log(FINER, "{0} is not to be removed or purged of artifacts because it’s marked as a keeper", run);
             return true;
         }
-        if (run == lastSuccessfulBuild) {
+        if (run == lastSuccessfulBuild && keepLastSuccessful) {
             LOGGER.log(FINER, "{0} is not to be removed or purged of artifacts because it’s the last successful build", run);
             return true;
         }
-        if (run == lastStableBuild) {
+        if (run == lastStableBuild && keepLastStable) {
             LOGGER.log(FINER, "{0} is not to be removed or purged of artifacts because it’s the last stable build", run);
             return true;
         }
